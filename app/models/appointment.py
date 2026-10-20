@@ -5,10 +5,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
 
-ACTIVE_STATUSES = ("pending", "confirmed")
+ACTIVE_STATUSES = ("reserved", "confirmed")
 SLOT_FREEING_STATUSES = ("cancelled", "rejected")
 ALL_STATUSES = (
-    "pending",
+    "reserved",
     "confirmed",
     "rejected",
     "cancelled",
@@ -25,7 +25,7 @@ class Appointment(Base):
     doctor_id: Mapped[int] = mapped_column(Integer, nullable=False)
     patient_id: Mapped[int] = mapped_column(Integer, nullable=False)
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="reserved")
     cancel_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)
     cancelled_by: Mapped[str | None] = mapped_column(String(10), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -40,7 +40,7 @@ class Appointment(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('pending','confirmed','rejected','cancelled','completed','no_show')",
+            "status IN ('reserved','confirmed','rejected','cancelled','completed','no_show')",
             name="ck_appointments_status",
         ),
         CheckConstraint(

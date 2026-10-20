@@ -40,7 +40,7 @@ async def test_same_row_updated(repo, doctors, clock):
     )
     assert result.id == original_id
     assert result.start_time == to_utc(at(20, 11))
-    assert result.status == "pending"
+    assert result.status == "reserved"
     assert len(repo.rows) == 1
 
 

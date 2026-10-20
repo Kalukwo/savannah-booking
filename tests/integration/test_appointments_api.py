@@ -26,7 +26,7 @@ async def test_root(client):
 async def test_double_booking_is_conflict(client, future_day):
     first = await client.post("/appointments", json=payload(future_day))
     assert first.status_code == 201
-    assert first.json()["status"] == "pending"
+    assert first.json()["status"] == "reserved"
 
     second = await client.post("/appointments", json=payload(future_day))
     assert second.status_code == 409

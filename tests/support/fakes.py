@@ -15,7 +15,7 @@ class InMemoryAppointmentRepository:
         self.committed = False
         self.rolled_back = False
 
-    def _make(self, doctor_id, patient_id, start_time, status="pending") -> Appointment:
+    def _make(self, doctor_id, patient_id, start_time, status="reserved") -> Appointment:
         a = Appointment(
             doctor_id=doctor_id,
             patient_id=patient_id,
@@ -90,7 +90,7 @@ class InMemoryAppointmentRepository:
     async def rollback(self):
         self.rolled_back = True
 
-    def seed(self, doctor_id, patient_id, start_time, status="pending"):
+    def seed(self, doctor_id, patient_id, start_time, status="reserved"):
         a = self._make(doctor_id, patient_id, start_time, status)
         self.rows.append(a)
         return a

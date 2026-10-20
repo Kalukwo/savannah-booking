@@ -82,7 +82,7 @@ async def book_appointment(
         doctor_id=doctor_id,
         patient_id=patient_id,
         start_time=start_utc,
-        status="pending",
+        status="reserved",
     )
     repo.add(appointment)
     try:

@@ -38,12 +38,12 @@ def at(day, hour, minute=0):
     return datetime(2026, 10, day, hour, minute, tzinfo=EAT)
 
 
-async def test_valid_booking_is_pending(repo, doctors, patients, clock):
+async def test_valid_booking_is_reserved(repo, doctors, patients, clock):
     appointment = await book_appointment(
         doctor_id=1, patient_id=1, start_time=at(20, 10),
         repo=repo, doctors=doctors, patients=patients, clock=clock,
     )
-    assert appointment.status == "pending"
+    assert appointment.status == "reserved"
     assert appointment.start_time == to_utc(at(20, 10))
 
 
@@ -78,7 +78,7 @@ async def test_exactly_one_hour_ahead_allowed(repo, doctors, patients, clock):
         doctor_id=1, patient_id=1, start_time=at(19, 9),
         repo=repo, doctors=doctors, patients=patients, clock=clock,
     )
-    assert appointment.status == "pending"
+    assert appointment.status == "reserved"
 
 
 async def test_before_working_hours_rejected(repo, doctors, patients, clock):
@@ -104,7 +104,7 @@ async def test_last_fitting_slot_allowed(repo, doctors, patients, clock):
         doctor_id=4, patient_id=1, start_time=at(20, 13, 30),
         repo=repo, doctors=doctors, patients=patients, clock=clock,
     )
-    assert appointment.status == "pending"
+    assert appointment.status == "reserved"
 
 
 async def test_non_working_day_rejected(repo, doctors, patients, clock):
@@ -147,7 +147,7 @@ async def test_slot_bookable_again_after_cancel(repo, doctors, patients, clock):
         doctor_id=1, patient_id=1, start_time=at(20, 10),
         repo=repo, doctors=doctors, patients=patients, clock=clock,
     )
-    assert appointment.status == "pending"
+    assert appointment.status == "reserved"
 
 
 async def test_slot_bookable_again_after_reject(repo, doctors, patients, clock):
@@ -157,4 +157,4 @@ async def test_slot_bookable_again_after_reject(repo, doctors, patients, clock):
         doctor_id=1, patient_id=1, start_time=at(20, 10),
         repo=repo, doctors=doctors, patients=patients, clock=clock,
     )
-    assert appointment.status == "pending"
+    assert appointment.status == "reserved"

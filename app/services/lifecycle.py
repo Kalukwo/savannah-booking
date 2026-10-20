@@ -26,7 +26,7 @@ async def approve(
     *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
-    if appointment.status != "pending":
+    if appointment.status != "reserved":
         raise InvalidTransition(appointment.status, "confirmed")
     if appointment.start_time <= clock():
         raise AppointmentExpired("approved")
@@ -39,7 +39,7 @@ async def reject(
     *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
-    if appointment.status != "pending":
+    if appointment.status != "reserved":
         raise InvalidTransition(appointment.status, "rejected")
     if appointment.start_time <= clock():
         raise AppointmentExpired("rejected")

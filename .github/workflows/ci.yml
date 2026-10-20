@@ -43,19 +43,19 @@ jobs:
 
       - uses: docker/login-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
       - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/clinic-api:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/clinic-api:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/clinic-api:latest
+            ${{ secrets.DOCKER_USERNAME }}/clinic-api:${{ github.sha }}
 
       # Only after the push, so Render pulls the new image.
       - name: Trigger Render deploy
         env:
           DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
-        run: curl -fsS -X POST "$DEPLOY_HOOK_URL&imgURL=docker.io/${{ secrets.DOCKERHUB_USERNAME }}/clinic-api:${{ github.sha }}"          
+        run: curl -fsS -X POST "$DEPLOY_HOOK_URL&imgURL=docker.io/${{ secrets.DOCKER_USERNAME }}/clinic-api:${{ github.sha }}"          

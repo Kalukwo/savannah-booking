@@ -1,12 +1,13 @@
 """Alembic environment: async engine, URL from settings/env."""
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from app.core.config import get_settings
+from app.core.config import _normalise_async_url, get_settings
 from app.db.base import Base
 from app.models import appointment, idempotency  # noqa: F401  (register tables)
 
@@ -18,9 +19,15 @@ target_metadata = Base.metadata
 
 
 def _url() -> str:
-    import os
+    """Build the asyncpg URL through the one shared normaliser.
 
-    return os.getenv("DATABASE_URL") or get_settings().async_database_url
+    A plain DATABASE_URL env var (Render, Neon) arrives as postgresql://...
+    ?sslmode=require, which asyncpg rejects. _normalise_async_url rewrites the
+    driver and sslmode; Settings.async_database_url already applies it, so
+    route the env var through it too rather than reading os.getenv directly.
+    """
+    raw = os.getenv("DATABASE_URL")
+    return _normalise_async_url(raw) if raw else get_settings().async_database_url
 
 
 def run_migrations_offline() -> None:

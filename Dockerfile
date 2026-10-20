@@ -18,12 +18,10 @@ COPY alembic.ini .
 RUN chown -R app:app /app
 USER app
 
+# Documentation only: Render supplies $PORT at runtime and ignores EXPOSE.
 EXPOSE 8000
 
-# Migrations are NOT in CMD.
-#   Render: set a Pre-Deploy Command of `alembic upgrade head` in the
-#           dashboard. It runs once per deploy, before instances boot, and a
-#           failure aborts the deploy instead of boot-looping a bad container.
-#   Local:  docker-compose runs `alembic upgrade head && uvicorn ...` as the
-#           app service's command, so a fresh volume is migrated on start.
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Migrations run here and nowhere else - Render's Pre-Deploy Command stays empty.
+# uvicorn takes over via exec so it receives SIGTERM from the platform directly.
+# ${PORT:-8000} must stay inside sh -c: JSON-array CMD does not expand vars.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

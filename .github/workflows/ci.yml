@@ -54,8 +54,8 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/clinic-api:latest
             ${{ secrets.DOCKER_USERNAME }}/clinic-api:${{ github.sha }}
 
-      # Only after the push, so Render pulls the new image.
       - name: Trigger Render deploy
         env:
           DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
-        run: curl -fsS -X POST "$DEPLOY_HOOK_URL&imgURL=docker.io/${{ secrets.DOCKER_USERNAME }}/clinic-api:${{ github.sha }}"          
+          IMAGE: docker.io%2F${{ secrets.DOCKER_USERNAME }}%2Fclinic-api%3A${{ github.sha }}
+        run: curl -fsS -X POST "${DEPLOY_HOOK_URL}&imgURL=${IMAGE}"

@@ -37,8 +37,8 @@ async def reschedule_appointment(
         raise AlreadyCancelled()
     if appointment.status == "rejected":
         raise RejectedNotCancellable("rescheduled")
-    if appointment.status not in ("pending", "confirmed"):
-        raise InvalidTransition(appointment.status, "pending")
+    if appointment.status not in ("reserved", "confirmed"):
+        raise InvalidTransition(appointment.status, "reserved")
     if appointment.start_time <= clock():
         raise AppointmentExpired("rescheduled")
 
@@ -57,7 +57,7 @@ async def reschedule_appointment(
     # WHY update the same row: there is never a moment where the old slot is
     # released but the new one is not yet held - the swap is atomic.
     appointment.start_time = new_utc
-    appointment.status = "pending"
+    appointment.status = "reserved"
     try:
         await repo.flush()
     except Exception as exc:

@@ -22,7 +22,7 @@ def at(day, hour, minute=0):
     return datetime(2026, 10, day, hour, minute, tzinfo=EAT)
 
 
-async def test_approve_pending(repo, clock):
+async def test_approve_reserved(repo, clock):
     row = repo.seed(1, 2, to_utc(at(20, 10)))
     result = await lifecycle.approve(
         appointment_id=row.id, doctor_id=1, repo=repo, clock=clock
@@ -30,7 +30,7 @@ async def test_approve_pending(repo, clock):
     assert result.status == "confirmed"
 
 
-async def test_reject_pending(repo, clock):
+async def test_reject_reserved(repo, clock):
     row = repo.seed(1, 2, to_utc(at(20, 10)))
     result = await lifecycle.reject(
         appointment_id=row.id, doctor_id=1, repo=repo, clock=clock
@@ -50,7 +50,7 @@ async def test_cannot_approve_confirmed(repo, clock):
         await lifecycle.approve(appointment_id=row.id, doctor_id=1, repo=repo, clock=clock)
 
 
-async def test_expired_pending_cannot_be_approved(repo, clock):
+async def test_expired_reserved_cannot_be_approved(repo, clock):
     row = repo.seed(1, 2, to_utc(at(18, 10)))
     with pytest.raises(AppointmentExpired):
         await lifecycle.approve(appointment_id=row.id, doctor_id=1, repo=repo, clock=clock)

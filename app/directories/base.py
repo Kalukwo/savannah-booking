@@ -5,6 +5,7 @@ the doctor service and patient records live elsewhere. Defining Protocols
 means the booking rules never learn where the data came from, and tests can
 hand in plain in-memory implementations.
 """
+import uuid
 from dataclasses import dataclass
 from datetime import time
 from typing import Protocol
@@ -18,10 +19,10 @@ class Schedule:
 
 
 class DoctorDirectory(Protocol):
-    async def exists(self, doctor_id: int) -> bool: ...
+    async def exists(self, doctor_id: uuid.UUID) -> bool: ...
 
-    async def get_schedule(self, doctor_id: int) -> Schedule | None: ...
+    async def get_schedule(self, doctor_id: uuid.UUID) -> Schedule | None: ...
 
 
 class PatientDirectory(Protocol):
-    async def exists(self, patient_id: int) -> bool: ...
+    async def exists(self, patient_id: uuid.UUID) -> bool: ...

@@ -1,4 +1,5 @@
 """Cancellation. The row lock makes concurrent cancels safe."""
+import uuid
 from app.core.clock import Clock
 from app.core.errors import (
     AlreadyCancelled,
@@ -15,10 +16,10 @@ from app.repositories.appointments import AppointmentRepository
 
 async def cancel_appointment(
     *,
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     reason: str,
     actor: str,
-    actor_id: int,
+    actor_id: uuid.UUID,
     repo: AppointmentRepository,
     clock: Clock,
 ) -> Appointment:

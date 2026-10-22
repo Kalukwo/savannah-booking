@@ -1,4 +1,5 @@
 """Reschedule in place: one row, one transaction, no gap."""
+import uuid
 from app.core.clock import Clock
 from app.core.errors import (
     AlreadyCancelled,
@@ -19,8 +20,8 @@ from app.services.booking import validate_slot
 
 async def reschedule_appointment(
     *,
-    appointment_id: int,
-    patient_id: int,
+    appointment_id: uuid.UUID,
+    patient_id: uuid.UUID,
     start_time,
     repo: AppointmentRepository,
     doctors: DoctorDirectory,

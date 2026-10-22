@@ -1,4 +1,6 @@
 """Patient-facing reads."""
+import uuid
+
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_appointment_repo, get_clock, get_patient_directory
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/patients", tags=["patients"])
 
 @router.get("/{patient_id}/appointments", response_model=list[AppointmentResponse])
 async def list_patient_appointments(
-    patient_id: int,
+    patient_id: uuid.UUID,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     patients: PatientDirectory = Depends(get_patient_directory),
     clock: Clock = Depends(get_clock),

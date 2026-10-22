@@ -1,4 +1,5 @@
 """Doctor availability lookup."""
+import uuid
 from datetime import date
 
 from fastapi import APIRouter, Depends
@@ -15,7 +16,7 @@ router = APIRouter(prefix="/doctors", tags=["doctors"])
 
 @router.get("/{doctor_id}/availability", response_model=AvailabilityResponse)
 async def get_availability(
-    doctor_id: int,
+    doctor_id: uuid.UUID,
     date: date,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     doctors: DoctorDirectory = Depends(get_doctor_directory),

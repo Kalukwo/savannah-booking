@@ -6,6 +6,7 @@ committed or neither is.
 """
 import hashlib
 import json
+import uuid
 from datetime import datetime
 
 from app.core.errors import IdempotencyKeyReused
@@ -20,7 +21,11 @@ def request_hash(body: dict) -> str:
         if isinstance(start, str):
             start = datetime.fromisoformat(start.replace("Z", "+00:00"))
         canonical["start_time"] = to_utc(start).isoformat()
-    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":"))
+    # UUIDs (doctor_id, patient_id) are not JSON serialisable; hash their text
+    # form so the same logical request always produces the same digest.
+    encoded = json.dumps(
+        canonical, sort_keys=True, separators=(",", ":"), default=str
+    )
     return hashlib.sha256(encoded.encode()).hexdigest()
 
 

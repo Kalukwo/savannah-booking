@@ -1,4 +1,6 @@
 """Appointment endpoints. Shape in, one service call, shape out."""
+import uuid
+
 from fastapi import APIRouter, Depends, Header, Response, status
 
 from app.api.deps import (
@@ -71,7 +73,7 @@ async def create_appointment(
 
 @router.patch("/{appointment_id}/cancel", response_model=AppointmentResponse)
 async def cancel_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: CancelRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     clock: Clock = Depends(get_clock),
@@ -95,7 +97,7 @@ async def cancel_appointment(
 
 @router.patch("/{appointment_id}/reschedule", response_model=AppointmentResponse)
 async def reschedule_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: RescheduleRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     doctors: DoctorDirectory = Depends(get_doctor_directory),
@@ -117,7 +119,7 @@ async def reschedule_appointment(
 
 @router.patch("/{appointment_id}/approve", response_model=AppointmentResponse)
 async def approve_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: DoctorActionRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     clock: Clock = Depends(get_clock),
@@ -133,7 +135,7 @@ async def approve_appointment(
 
 @router.patch("/{appointment_id}/reject", response_model=AppointmentResponse)
 async def reject_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: DoctorActionRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     clock: Clock = Depends(get_clock),
@@ -149,7 +151,7 @@ async def reject_appointment(
 
 @router.patch("/{appointment_id}/complete", response_model=AppointmentResponse)
 async def complete_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: DoctorActionRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     clock: Clock = Depends(get_clock),
@@ -165,7 +167,7 @@ async def complete_appointment(
 
 @router.patch("/{appointment_id}/no-show", response_model=AppointmentResponse)
 async def no_show_appointment(
-    appointment_id: int,
+    appointment_id: uuid.UUID,
     payload: DoctorActionRequest,
     repo: AppointmentRepository = Depends(get_appointment_repo),
     clock: Clock = Depends(get_clock),

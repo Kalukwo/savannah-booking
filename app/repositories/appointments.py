@@ -1,4 +1,5 @@
 """Every appointment query lives here; services hold the rules."""
+import uuid
 from datetime import datetime
 
 from sqlalchemy import select
@@ -11,17 +12,17 @@ class AppointmentRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    async def get(self, appointment_id: int) -> Appointment | None:
+    async def get(self, appointment_id: uuid.UUID) -> Appointment | None:
         return await self.session.get(Appointment, appointment_id)
 
-    async def get_for_update(self, appointment_id: int) -> Appointment | None:
+    async def get_for_update(self, appointment_id: uuid.UUID) -> Appointment | None:
         # WHY: the row lock serialises state changes on one appointment, so two
         # cancels or a cancel racing a reschedule cannot both succeed.
         stmt = select(Appointment).where(Appointment.id == appointment_id).with_for_update()
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def find_active(self, doctor_id: int, start_time: datetime) -> Appointment | None:
+    async def find_active(self, doctor_id: uuid.UUID, start_time: datetime) -> Appointment | None:
         stmt = select(Appointment).where(
             Appointment.doctor_id == doctor_id,
             Appointment.start_time == start_time,
@@ -31,7 +32,7 @@ class AppointmentRepository:
         return result.scalar_one_or_none()
 
     async def list_active_between(
-        self, doctor_id: int, start: datetime, end: datetime
+        self, doctor_id: uuid.UUID, start: datetime, end: datetime
     ) -> list[Appointment]:
         stmt = select(Appointment).where(
             Appointment.doctor_id == doctor_id,
@@ -43,7 +44,7 @@ class AppointmentRepository:
         return list(result.scalars().all())
 
     async def list_upcoming_for_patient(
-        self, patient_id: int, now: datetime
+        self, patient_id: uuid.UUID, now: datetime
     ) -> list[Appointment]:
         stmt = (
             select(Appointment)

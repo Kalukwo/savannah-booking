@@ -3,6 +3,7 @@
 The repository fake cannot prove database constraints - integration tests
 cover the partial unique index.
 """
+import uuid
 from datetime import datetime, timedelta, timezone
 
 from app.models.appointment import ACTIVE_STATUSES, Appointment
@@ -11,7 +12,6 @@ from app.models.appointment import ACTIVE_STATUSES, Appointment
 class InMemoryAppointmentRepository:
     def __init__(self) -> None:
         self.rows: list[Appointment] = []
-        self._next_id = 1
         self.committed = False
         self.rolled_back = False
 
@@ -24,8 +24,7 @@ class InMemoryAppointmentRepository:
             cancel_reason=None,
             cancelled_by=None,
         )
-        a.id = self._next_id
-        self._next_id += 1
+        a.id = uuid.uuid4()
         now = datetime.now(timezone.utc)
         a.created_at = now
         a.updated_at = now
@@ -72,8 +71,7 @@ class InMemoryAppointmentRepository:
 
     def add(self, appointment):
         if getattr(appointment, "id", None) is None:
-            appointment.id = self._next_id
-            self._next_id += 1
+            appointment.id = uuid.uuid4()
         if getattr(appointment, "created_at", None) is None:
             now = datetime.now(timezone.utc)
             appointment.created_at = now

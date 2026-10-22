@@ -1,4 +1,5 @@
 """Slot generation for a single doctor on a single EAT day."""
+import uuid
 from datetime import date, datetime, timedelta, timezone
 
 from app.core.clock import Clock
@@ -11,7 +12,7 @@ from app.services.booking import MIN_NOTICE, SLOT_MINUTES
 
 async def generate_slots(
     *,
-    doctor_id: int,
+    doctor_id: uuid.UUID,
     day: date,
     repo: AppointmentRepository,
     doctors: DoctorDirectory,

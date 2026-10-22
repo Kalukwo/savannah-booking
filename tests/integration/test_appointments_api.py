@@ -1,15 +1,27 @@
+import asyncio
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from app.directories.test_data.doctor_directory import fixed_uuid
+
 pytestmark = pytest.mark.integration
+
+DOC1 = str(fixed_uuid(1))
+DOC2 = str(fixed_uuid(2))
+PAT1 = str(fixed_uuid(101))
+PAT2 = str(fixed_uuid(102))
+
+# A UUID that is syntactically valid but belongs to no directory entry.
+UNKNOWN_DOCTOR = "11111111-1111-4111-8111-111111111111"
+UNKNOWN_APPOINTMENT = "22222222-2222-4222-8222-222222222222"
 
 
 def day_at(day, hour, minute=0):
     return (day + timedelta(hours=hour, minutes=minute)).isoformat()
 
 
-def payload(day, doctor=1, patient=1, hour=10, minute=0):
+def payload(day, doctor=DOC1, patient=PAT1, hour=10, minute=0):
     return {
         "doctor_id": doctor,
         "patient_id": patient,
@@ -39,8 +51,6 @@ async def test_concurrent_booking_has_one_winner(client, future_day):
         client.post("/appointments", json=body),
         client.post("/appointments", json=body),
     ]
-    import asyncio
-
     responses = await asyncio.gather(first, second, return_exceptions=True)
     codes = sorted(r.status_code for r in responses)
     assert codes == [201, 409]
@@ -57,7 +67,7 @@ async def test_same_instant_different_offsets_conflict(client, future_day):
     ).strftime("%Y-%m-%dT%H:%M:%SZ")
     second = await client.post(
         "/appointments",
-        json={"doctor_id": 1, "patient_id": 2, "start_time": utc_equivalent},
+        json={"doctor_id": DOC1, "patient_id": PAT2, "start_time": utc_equivalent},
     )
     assert second.status_code == 409
     assert second.json()["code"] == "SLOT_TAKEN"
@@ -67,7 +77,7 @@ async def test_naive_time_is_eat(client, future_day):
     naive = (future_day + timedelta(hours=13)).strftime("%Y-%m-%dT%H:%M:%S")
     response = await client.post(
         "/appointments",
-        json={"doctor_id": 1, "patient_id": 1, "start_time": naive},
+        json={"doctor_id": DOC1, "patient_id": PAT1, "start_time": naive},
     )
     assert response.status_code == 201
     returned = datetime.fromisoformat(response.json()["start_time"])
@@ -80,30 +90,30 @@ async def test_cancel_frees_slot_for_rebooking(client, future_day):
 
     cancelled = await client.patch(
         f"/appointments/{appointment_id}/cancel",
-        json={"reason": "Unwell", "actor": "patient", "actor_id": 1},
+        json={"reason": "Unwell", "actor": "patient", "actor_id": PAT1},
     )
     assert cancelled.status_code == 200
     assert cancelled.json()["status"] == "cancelled"
 
     rebooked = await client.post(
-        "/appointments", json=payload(future_day, patient=2, hour=14)
+        "/appointments", json=payload(future_day, patient=PAT2, hour=14)
     )
     assert rebooked.status_code == 201
 
 
 async def test_reschedule_onto_taken_slot_keeps_original(client, future_day):
     first = await client.post("/appointments", json=payload(future_day, hour=15))
-    await client.post("/appointments", json=payload(future_day, patient=2, hour=15, minute=30))
+    await client.post("/appointments", json=payload(future_day, patient=PAT2, hour=15, minute=30))
 
     appointment_id = first.json()["id"]
     response = await client.patch(
         f"/appointments/{appointment_id}/reschedule",
-        json={"patient_id": 1, "start_time": day_at(future_day, 15, 30)},
+        json={"patient_id": PAT1, "start_time": day_at(future_day, 15, 30)},
     )
     assert response.status_code == 409
     assert response.json()["code"] == "SLOT_TAKEN"
 
-    listed = await client.get("/patients/1/appointments")
+    listed = await client.get(f"/patients/{PAT1}/appointments")
     starts = [datetime.fromisoformat(row["start_time"]).hour for row in listed.json()]
     assert 15 in starts
 
@@ -113,12 +123,12 @@ async def test_full_flow(client, future_day):
     appointment_id = created.json()["id"]
 
     approved = await client.patch(
-        f"/appointments/{appointment_id}/approve", json={"doctor_id": 1}
+        f"/appointments/{appointment_id}/approve", json={"doctor_id": DOC1}
     )
     assert approved.status_code == 200
     assert approved.json()["status"] == "confirmed"
 
-    listed = await client.get("/patients/1/appointments")
+    listed = await client.get(f"/patients/{PAT1}/appointments")
     rows = listed.json()
     assert rows and rows[0]["status"] == "confirmed"
     timestamps = [row["start_time"] for row in rows]
@@ -126,16 +136,26 @@ async def test_full_flow(client, future_day):
 
 
 async def test_error_shapes(client):
-    missing = await client.patch("/appointments/99999/approve", json={"doctor_id": 1})
+    missing = await client.patch(
+        f"/appointments/{UNKNOWN_APPOINTMENT}/approve", json={"doctor_id": DOC1}
+    )
     assert missing.status_code == 404
     assert set(missing.json()) == {"code", "detail"}
 
     invalid = await client.post(
         "/appointments",
-        json={"doctor_id": 1, "patient_id": 1, "start_time": "not-a-date"},
+        json={"doctor_id": DOC1, "patient_id": PAT1, "start_time": "not-a-date"},
     )
     assert invalid.status_code == 422
     assert invalid.json()["code"] == "VALIDATION_ERROR"
+
+
+async def test_unknown_doctor_is_not_found(client, future_day):
+    response = await client.post(
+        "/appointments", json=payload(future_day, doctor=UNKNOWN_DOCTOR)
+    )
+    assert response.status_code == 404
+    assert response.json()["code"] == "DOCTOR_NOT_FOUND"
 
 
 async def test_availability_excludes_booked_slot(client, future_day):
@@ -143,7 +163,7 @@ async def test_availability_excludes_booked_slot(client, future_day):
     assert booked.status_code == 201
 
     response = await client.get(
-        "/doctors/1/availability", params={"date": future_day.date().isoformat()}
+        f"/doctors/{DOC1}/availability", params={"date": future_day.date().isoformat()}
     )
     assert response.status_code == 200
     # Compare full instants, not hours: 10:30 truncates to hour 10, so an

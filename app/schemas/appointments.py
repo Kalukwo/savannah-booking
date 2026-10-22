@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 from typing import Literal
 
@@ -10,8 +11,8 @@ class StrictModel(BaseModel):
 
 
 class AppointmentCreate(StrictModel):
-    doctor_id: int = Field(..., examples=[1])
-    patient_id: int = Field(..., examples=[2])
+    doctor_id: uuid.UUID = Field(..., examples=["00000000-0000-4000-8000-000000000001"])
+    patient_id: uuid.UUID = Field(..., examples=["00000000-0000-4000-8000-000000000101"])
     start_time: datetime = Field(
         ...,
         description="Slot start. Naive values are treated as EAT.",
@@ -22,22 +23,22 @@ class AppointmentCreate(StrictModel):
 class CancelRequest(StrictModel):
     reason: str = Field(..., max_length=500, examples=["Patient is unwell"])
     actor: Literal["patient", "doctor"] = Field(..., examples=["patient"])
-    actor_id: int = Field(..., examples=[2])
+    actor_id: uuid.UUID = Field(..., examples=["00000000-0000-4000-8000-000000000101"])
 
 
 class RescheduleRequest(StrictModel):
-    patient_id: int = Field(..., examples=[2])
+    patient_id: uuid.UUID = Field(..., examples=["00000000-0000-4000-8000-000000000101"])
     start_time: datetime = Field(..., examples=["2026-10-21T14:30:00+03:00"])
 
 
 class DoctorActionRequest(StrictModel):
-    doctor_id: int = Field(..., examples=[1])
+    doctor_id: uuid.UUID = Field(..., examples=["00000000-0000-4000-8000-000000000001"])
 
 
 class AppointmentResponse(BaseModel):
-    id: int
-    doctor_id: int
-    patient_id: int
+    id: uuid.UUID
+    doctor_id: uuid.UUID
+    patient_id: uuid.UUID
     start_time: datetime
     status: str
     cancel_reason: str | None = None
@@ -63,6 +64,6 @@ class AppointmentResponse(BaseModel):
 
 
 class AvailabilityResponse(BaseModel):
-    doctor_id: int
+    doctor_id: uuid.UUID
     date: str
     slots: list[datetime]

@@ -1,6 +1,7 @@
+import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, Index, Integer, String, text
+from sqlalchemy import CheckConstraint, DateTime, Index, String, Uuid, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -20,10 +21,14 @@ ALL_STATUSES = (
 class Appointment(Base):
     __tablename__ = "appointments"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    # Plain integers: the doctor and patient services own those records.
-    doctor_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    patient_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Generated in Python, not by the database, so the id is known before flush
+    # and the row can be returned without a second round trip.
+    id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
+    # UUIDs, not integers: the doctor and patient services own those records and
+    # identify them by UUID. Still plain columns with no foreign key - the rows
+    # live in another service's database.
+    doctor_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
+    patient_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     start_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="reserved")
     cancel_reason: Mapped[str | None] = mapped_column(String(500), nullable=True)

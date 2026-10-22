@@ -1,4 +1,5 @@
 """Booking rules. The order of checks matters; the first failure wins."""
+import uuid
 from datetime import timedelta
 
 from sqlalchemy.exc import IntegrityError
@@ -50,8 +51,8 @@ async def validate_slot(
 
 async def book_appointment(
     *,
-    doctor_id: int,
-    patient_id: int,
+    doctor_id: uuid.UUID,
+    patient_id: uuid.UUID,
     start_time,
     repo: AppointmentRepository,
     doctors: DoctorDirectory,

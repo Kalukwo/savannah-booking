@@ -1,4 +1,5 @@
 """Doctor-driven transitions: approve, reject, complete, no-show."""
+import uuid
 from app.core.clock import Clock
 from app.core.errors import (
     AppointmentExpired,
@@ -11,7 +12,7 @@ from app.repositories.appointments import AppointmentRepository
 
 
 async def _load_for_doctor(
-    appointment_id: int, doctor_id: int, repo: AppointmentRepository
+    appointment_id: uuid.UUID, doctor_id: uuid.UUID, repo: AppointmentRepository
 ) -> Appointment:
     appointment = await repo.get_for_update(appointment_id)
     if appointment is None:
@@ -23,7 +24,7 @@ async def _load_for_doctor(
 
 
 async def approve(
-    *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
+    *, appointment_id: uuid.UUID, doctor_id: uuid.UUID, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
     if appointment.status != "reserved":
@@ -36,7 +37,7 @@ async def approve(
 
 
 async def reject(
-    *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
+    *, appointment_id: uuid.UUID, doctor_id: uuid.UUID, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
     if appointment.status != "reserved":
@@ -49,7 +50,7 @@ async def reject(
 
 
 async def complete(
-    *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
+    *, appointment_id: uuid.UUID, doctor_id: uuid.UUID, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
     if appointment.status != "confirmed":
@@ -64,7 +65,7 @@ async def complete(
 
 
 async def no_show(
-    *, appointment_id: int, doctor_id: int, repo: AppointmentRepository, clock: Clock
+    *, appointment_id: uuid.UUID, doctor_id: uuid.UUID, repo: AppointmentRepository, clock: Clock
 ) -> Appointment:
     appointment = await _load_for_doctor(appointment_id, doctor_id, repo)
     if appointment.status != "confirmed":
